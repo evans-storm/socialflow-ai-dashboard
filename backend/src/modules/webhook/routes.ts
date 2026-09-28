@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { validate } from '../middleware/validate';
-import { createWebhookSchema, updateWebhookSchema, testWebhookSchema } from '../schemas/webhooks';
+import { authMiddleware } from '../../middleware/authMiddleware';
+import { validate } from '../../middleware/validate';
+import { createWebhookSchema, updateWebhookSchema, testWebhookSchema } from '../../schemas/webhooks';
 import {
   listWebhooks,
   createWebhook,
@@ -12,7 +12,7 @@ import {
   testWebhook,
   listDeliveries,
   replayDelivery,
-} from '../controllers/webhooks';
+} from '../../controllers/webhooks';
 
 const router = Router();
 
