@@ -75,6 +75,12 @@ export async function addMember(req: AuthRequest, res: Response): Promise<void> 
     return;
   }
 
+  // Only an owner may grant the owner role (prevents admin self-promotion)
+  if (role === 'owner' && callerMembership.role !== 'owner') {
+    res.status(403).json({ message: 'Only an owner can grant the owner role' });
+    return;
+  }
+
   const member = await prisma.organizationMember.create({
     data: { id: randomUUID(), organizationId: orgId, userId, role },
   });
@@ -92,6 +98,21 @@ export async function removeMember(req: AuthRequest, res: Response): Promise<voi
   if (!callerMembership || !['owner', 'admin'].includes(callerMembership.role)) {
     res.status(403).json({ message: 'Insufficient permissions' });
     return;
+  }
+
+  const targetMembership = await prisma.organizationMember.findUnique({
+    where: { organizationId_userId: { organizationId: orgId, userId } },
+  });
+
+  // Never allow removing the organization's last remaining owner
+  if (targetMembership?.role === 'owner') {
+    const ownerCount = await prisma.organizationMember.count({
+      where: { organizationId: orgId, role: 'owner' },
+    });
+    if (ownerCount <= 1) {
+      res.status(403).json({ message: 'Cannot remove the last owner of the organization' });
+      return;
+    }
   }
 
   await prisma.organizationMember.delete({
